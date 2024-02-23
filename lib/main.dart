@@ -1,26 +1,28 @@
+//import 'dart:html';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 
 void main() {
-  runApp(MaterialApp(home: SimpleHttpDemo()));
+  runApp(MaterialApp(home: Login(title: "dj")));
 }
 
-class SimpleHttpDemo extends StatefulWidget {
-  const SimpleHttpDemo({Key? key}) : super(key: key);
+class Attendance extends StatefulWidget {
+  const Attendance({Key? key}) : super(key: key);
 
   @override
-  State<SimpleHttpDemo> createState() => HttpState();
+  State<Attendance> createState() => AttendanceState();
 }
 
-class HttpState extends State<SimpleHttpDemo> {
+class AttendanceState extends State<Attendance> {
   int number = 1;
   var attendance =
-      List.generate(75, (index) => true); // All are initially present
+  List.generate(75, (index) => true); // All are initially present
   bool isAttendanceComplete = false;
 
   List<int> getAbsentNos() {
     List<int> result = [];
-    for (int i = 0;i<attendance.length;i++) {
+    for (int i = 0; i < attendance.length; i++) {
       if (!attendance[i]) {
         result.add(i);
       }
@@ -31,27 +33,28 @@ class HttpState extends State<SimpleHttpDemo> {
 
   void confirmSubmission() {
     showDialog(
-        context: context,
-        builder: (BuildContext cxt) {
-          return AlertDialog(
-            title: const Text('Submit attendance?'),
-            actions: [
-              TextButton(
-                  onPressed: () {
-                    Navigator.of(cxt).pop();
-                  },
-                  child: const Text("Cancel")),
-              TextButton(
-                  onPressed: () async {
-                    print("submitted");
-                    var absentNos = getAbsentNos();
-                    get(Uri.parse("http://192.168.140.184:4242/uploadAttendance?absent=$absentNos"));
-                    Navigator.of(cxt).pop();
-                  },
-                  child: const Text("Submit")),
-            ],
-          );
-        });
+      context: context,
+      builder: (BuildContext cxt) {
+        return AlertDialog(
+          title: const Text('Submit attendance?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(cxt).pop();
+              },
+              child: const Text("Cancel")),
+            TextButton(
+              onPressed: () async {
+                print("submitted");
+                var absentNos = getAbsentNos();
+                get(Uri.parse(
+                    "http://192.168.140.184:4242/uploadAttendance?absent=$absentNos"));
+                Navigator.of(cxt).pop();
+              },
+              child: const Text("Submit")),
+          ],
+        );
+    });
   }
 
   @override
@@ -82,19 +85,22 @@ class HttpState extends State<SimpleHttpDemo> {
                     return TextButton(
                       onPressed: () {
                         setState(() {
-                          attendance[index] = !attendance[index];
+                            attendance[index] = !attendance[index];
                         });
                       },
                       style: ButtonStyle(
-                          backgroundColor: MaterialStatePropertyAll(
-                              attendance[index]
-                              ? Colors.lightGreenAccent
-                              : Colors.pinkAccent)),
-                          child: Text('$displayIndex',
-                            style: TextStyle(fontSize: 10,
-                              color: attendance[index] ? Colors.black : Colors.white)),
-                        );
-                      },
+                        backgroundColor: MaterialStatePropertyAll(
+                          attendance[index]
+                          ? Colors.lightGreenAccent
+                          : Colors.pinkAccent)),
+                      child: Text('$displayIndex',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: attendance[index]
+                          ? Colors.black
+                          : Colors.white)),
+                    );
+                  },
                 ),
               ),
             ),
@@ -126,27 +132,149 @@ class HttpState extends State<SimpleHttpDemo> {
             ),
           ),
           Container(
-              margin: const EdgeInsets.all(10),
-              child: FloatingActionButton.large(
-                onPressed: () {
-                  attendance[number - 1] = true;
-                  if (number <= 74) {
-                    number++;
-                  } else {
-                    isAttendanceComplete = true;
-                  }
+            margin: const EdgeInsets.all(10),
+            child: FloatingActionButton.large(
+              onPressed: () {
+                attendance[number - 1] = true;
+                if (number <= 74) {
+                  number++;
+                } else {
+                  isAttendanceComplete = true;
+                }
 
-                  setState(() {});
+                setState(() {});
 
-                  if (isAttendanceComplete) {
-                    confirmSubmission();
-                  }
-                },
-                backgroundColor: Colors.lightGreenAccent,
-                child: const Icon(Icons.check),
-              )),
+                if (isAttendanceComplete) {
+                  confirmSubmission();
+                }
+              },
+              backgroundColor: Colors.lightGreenAccent,
+              child: const Icon(Icons.check),
+          )),
         ],
       ),
     );
+  }
+}
+
+class Login extends StatefulWidget {
+  const Login({super.key, required this.title});
+
+  final String title;
+
+  @override
+  State<Login> createState() => LoginState();
+}
+
+class LoginState extends State<Login> {
+  final _formKey = GlobalKey<FormState>();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: Form(
+        key: _formKey,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                child: TextFormField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(), labelText: "Email"),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                child: TextFormField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(), labelText: "Password"),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 16.0),
+                child: Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        if (emailController.text == "hrushikesh" && passwordController.text == "1234") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Attendance()),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Invalid Credentials')),
+                          );
+                        }
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please fill input')),
+                        );
+                      }
+                    },
+                    child: const Text('Submit'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key, required this.email});
+
+  final String email;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home Page'),
+      ),
+      body: Column(
+        children: [
+          Text(email),
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("Go back!"),
+            ),
+          ),
+        ],
+    ));
   }
 }
