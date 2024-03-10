@@ -2,9 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 void main() {
-  runApp(MaterialApp(home: Login(title: "dj")));
+  runApp(MaterialApp(home: Login(title: "Login")));
 }
 
 class Attendance extends StatefulWidget {
@@ -17,7 +19,7 @@ class Attendance extends StatefulWidget {
 class AttendanceState extends State<Attendance> {
   int number = 1;
   var attendance =
-  List.generate(75, (index) => true); // All are initially present
+      List.generate(75, (index) => true); // All are initially present
   bool isAttendanceComplete = false;
 
   List<int> getAbsentNos() {
@@ -33,28 +35,28 @@ class AttendanceState extends State<Attendance> {
 
   void confirmSubmission() {
     showDialog(
-      context: context,
-      builder: (BuildContext cxt) {
-        return AlertDialog(
-          title: const Text('Submit attendance?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(cxt).pop();
-              },
-              child: const Text("Cancel")),
-            TextButton(
-              onPressed: () async {
-                print("submitted");
-                var absentNos = getAbsentNos();
-                get(Uri.parse(
-                    "http://192.168.140.184:4242/uploadAttendance?absent=$absentNos"));
-                Navigator.of(cxt).pop();
-              },
-              child: const Text("Submit")),
-          ],
-        );
-    });
+        context: context,
+        builder: (BuildContext cxt) {
+          return AlertDialog(
+            title: const Text('Submit attendance?'),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(cxt).pop();
+                  },
+                  child: const Text("Cancel")),
+              TextButton(
+                  onPressed: () async {
+                    print("submitted");
+                    var absentNos = getAbsentNos();
+                    get(Uri.parse(
+                        "http://192.168.1.49:4242/uploadAttendance?absent=$absentNos"));
+                    Navigator.of(cxt).pop();
+                  },
+                  child: const Text("Submit")),
+            ],
+          );
+        });
   }
 
   @override
@@ -85,20 +87,20 @@ class AttendanceState extends State<Attendance> {
                     return TextButton(
                       onPressed: () {
                         setState(() {
-                            attendance[index] = !attendance[index];
+                          attendance[index] = !attendance[index];
                         });
                       },
                       style: ButtonStyle(
-                        backgroundColor: MaterialStatePropertyAll(
-                          attendance[index]
-                          ? Colors.lightGreenAccent
-                          : Colors.pinkAccent)),
+                          backgroundColor: MaterialStatePropertyAll(
+                              attendance[index]
+                                  ? Colors.lightGreenAccent
+                                  : Colors.pinkAccent)),
                       child: Text('$displayIndex',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: attendance[index]
-                          ? Colors.black
-                          : Colors.white)),
+                          style: TextStyle(
+                              fontSize: 10,
+                              color: attendance[index]
+                                  ? Colors.black
+                                  : Colors.white)),
                     );
                   },
                 ),
@@ -132,25 +134,25 @@ class AttendanceState extends State<Attendance> {
             ),
           ),
           Container(
-            margin: const EdgeInsets.all(10),
-            child: FloatingActionButton.large(
-              onPressed: () {
-                attendance[number - 1] = true;
-                if (number <= 74) {
-                  number++;
-                } else {
-                  isAttendanceComplete = true;
-                }
+              margin: const EdgeInsets.all(10),
+              child: FloatingActionButton.large(
+                onPressed: () {
+                  attendance[number - 1] = true;
+                  if (number <= 74) {
+                    number++;
+                  } else {
+                    isAttendanceComplete = true;
+                  }
 
-                setState(() {});
+                  setState(() {});
 
-                if (isAttendanceComplete) {
-                  confirmSubmission();
-                }
-              },
-              backgroundColor: Colors.lightGreenAccent,
-              child: const Icon(Icons.check),
-          )),
+                  if (isAttendanceComplete) {
+                    confirmSubmission();
+                  }
+                },
+                backgroundColor: Colors.lightGreenAccent,
+                child: const Icon(Icons.check),
+              )),
         ],
       ),
     );
@@ -171,6 +173,10 @@ class LoginState extends State<Login> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
+  String url = "192.168.1.49:4242/login?";
+
+  late Future<Response> loginResponse;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -186,11 +192,11 @@ class LoginState extends State<Login> {
             children: [
               Padding(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: TextFormField(
                   controller: emailController,
                   decoration: const InputDecoration(
-                    border: OutlineInputBorder(), labelText: "Email"),
+                      border: OutlineInputBorder(), labelText: "Email"),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
@@ -201,12 +207,12 @@ class LoginState extends State<Login> {
               ),
               Padding(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: TextFormField(
                   controller: passwordController,
                   obscureText: true,
                   decoration: const InputDecoration(
-                    border: OutlineInputBorder(), labelText: "Password"),
+                      border: OutlineInputBorder(), labelText: "Password"),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your password';
@@ -217,31 +223,57 @@ class LoginState extends State<Login> {
               ),
               Padding(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 16.0),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 16.0),
                 child: Center(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        if (emailController.text == "hrushikesh" && passwordController.text == "1234") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const Attendance()),
+                  child: FutureBuilder(
+                      future: loginResponse,
+                      builder: (BuildContext ctx, AsyncSnapshot snapshot) {
+                        if (snapshot == null) {
+                          return ElevatedButton(
+                            onPressed: () {
+                              var passHash = sha256.convert(
+                                  utf8.encode(passwordController.text));
+
+                              loginResponse = get(Uri.parse(
+                                  "$url?user=${emailController.text}&pass=$passHash"));
+
+                              if (_formKey.currentState!.validate()) {
+                                if (emailController.text == "hrushikesh" &&
+                                    passwordController.text == "1234") {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const Attendance()),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text('Invalid Credentials')),
+                                  );
+                                }
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Please fill input')),
+                                );
+                              }
+                            },
+                            child: const Text('Submit'),
                           );
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Invalid Credentials')),
-                          );
+                          String response = json.decode(snapshot.data.body);
+                          if (response == "success") {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const Attendance()));
+                            return const Text("success");
+                          } else {
+                            return const Text("login failed");
+                          }
                         }
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please fill input')),
-                        );
-                      }
-                    },
-                    child: const Text('Submit'),
-                  ),
+                      }),
                 ),
               ),
             ],
@@ -260,21 +292,21 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home Page'),
-      ),
-      body: Column(
-        children: [
-          Text(email),
-          Center(
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text("Go back!"),
+        appBar: AppBar(
+          title: const Text('Home Page'),
+        ),
+        body: Column(
+          children: [
+            Text(email),
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text("Go back!"),
+              ),
             ),
-          ),
-        ],
-    ));
+          ],
+        ));
   }
 }
