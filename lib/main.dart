@@ -173,9 +173,9 @@ class LoginState extends State<Login> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
-  String url = "192.168.1.49:4242/login?";
+  String url = "http://192.168.84.184:4242/login";
 
-  late Future<Response> loginResponse;
+  Future<Response> loginResponse = Future.any([]);
 
   @override
   Widget build(BuildContext context) {
@@ -228,11 +228,13 @@ class LoginState extends State<Login> {
                   child: FutureBuilder(
                       future: loginResponse,
                       builder: (BuildContext ctx, AsyncSnapshot snapshot) {
-                        if (snapshot == null) {
+                        if (snapshot.data == null) {
                           return ElevatedButton(
                             onPressed: () {
                               var passHash = sha256.convert(
                                   utf8.encode(passwordController.text));
+
+                              print("$url?user=${emailController.text}&pass=$passHash");
 
                               loginResponse = get(Uri.parse(
                                   "$url?user=${emailController.text}&pass=$passHash"));
