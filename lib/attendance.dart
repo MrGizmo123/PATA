@@ -84,9 +84,10 @@ class AttendanceState extends State<Attendance> {
                     String user = widget.user;
                     String pass = widget.pass;
                     String subject = widget.subject;
+                    String batch = widget.batch;
 
                     get(Uri.parse(
-                        "$SERVER_ADDRESS/uploadAttendance?user=$user&pass=$pass&subject=$subject&present=$presentList"));
+                        "$SERVER_ADDRESS/uploadAttendance?user=$user&pass=$pass&subject=$subject&batch=$batch&present=$presentList"));
                     Navigator.of(cxt).pop();
                   },
                   child: const Text("Submit")),

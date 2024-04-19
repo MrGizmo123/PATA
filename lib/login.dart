@@ -3,9 +3,10 @@ import 'package:http/http.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 
-import 'schedule.dart';
+import 'teacher_dashboard.dart';
 import 'constants.dart';
 import 'attendance_viewer.dart';
+import 'attendance_downloader.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key, required this.title});
@@ -94,7 +95,7 @@ class LoginState extends State<Login> {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => Schedule(
+                                    builder: (context) => TeacherDashboard(
                                         user: user,
                                         pass: passHash.toString())));
                           } else {

@@ -28,7 +28,6 @@ class Schedule extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(leading: null, title: const Text("Schedule")),
         body: FutureBuilder(
             future: getSchedule(),
             builder: (cxt, snapshot) {
